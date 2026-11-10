@@ -137,9 +137,9 @@ fun GuardScreen() {
             Section("Protection") {
                 ListItem(
                     { Text("Restore automatically") },
-                    supportingContent = { Text("Put deleted contacts back without asking. Mass deletions always ask.") },
+                    supportingContent = { Text("Contacts deleted outside Phone Guard come back on their own. Many at once always asks first.") },
                     trailingContent = {
-                        var on by remember { mutableStateOf(p.getBoolean("autoRestore", false)) }
+                        var on by remember { mutableStateOf(Guard.autoRestore(ctx)) }
                         Switch(on, { on = it; p.edit().putBoolean("autoRestore", it).apply() })
                     },
                     colors = clear,

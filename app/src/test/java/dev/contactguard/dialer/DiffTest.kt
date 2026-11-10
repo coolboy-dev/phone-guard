@@ -25,10 +25,3 @@ class DiffTest {
     }
 }
 
-class DialableTest {
-    @Test fun keepsOnlyDialableChars() {
-        assertEquals("+919876543210", dialable("Call me: +91 98765-43210"))
-        assertEquals("*#06#", dialable("*#06#"))
-        assertEquals("12", dialable("1+2"))
-    }
-}

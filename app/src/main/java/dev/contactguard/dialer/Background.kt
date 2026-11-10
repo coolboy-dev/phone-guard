@@ -12,7 +12,6 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.provider.ContactsContract
-import android.telecom.VideoProfile
 import kotlin.concurrent.thread
 
 class App : Application() {
@@ -21,18 +20,18 @@ class App : Application() {
         val nm = getSystemService(NotificationManager::class.java)
         nm.createNotificationChannels(
             listOf(
-                NotificationChannel(CH_INCOMING, "Incoming calls", NotificationManager.IMPORTANCE_HIGH).apply { setSound(null, null) },
-                NotificationChannel(CH_ONGOING, "Ongoing calls", NotificationManager.IMPORTANCE_LOW),
                 NotificationChannel(CH_GUARD, "Contact protection", NotificationManager.IMPORTANCE_HIGH),
+                NotificationChannel(CH_RESTORED, "Contacts brought back", NotificationManager.IMPORTANCE_LOW),
             ),
         )
+        // Channels from the old dialer build.
+        listOf("incoming", "ongoing").forEach { nm.deleteNotificationChannel(it) }
         GuardJob.schedule(this)
     }
 
     companion object {
-        const val CH_INCOMING = "incoming"
-        const val CH_ONGOING = "ongoing"
         const val CH_GUARD = "guard"
+        const val CH_RESTORED = "restored"
     }
 }
 
@@ -92,16 +91,10 @@ class Actions : BroadcastReceiver() {
                 val done = goAsync()
                 thread { try { Guard.restore(ctx, intent.getLongExtra("id", 0)) } finally { done.finish() } }
             }
-            ANSWER -> Calls.primary()?.answer(VideoProfile.STATE_AUDIO_ONLY)
-            DECLINE -> Calls.primary()?.reject(false, null)
-            HANGUP -> Calls.primary()?.disconnect()
         }
     }
 
     companion object {
         const val RESTORE = "restore"
-        const val ANSWER = "answer"
-        const val DECLINE = "decline"
-        const val HANGUP = "hangup"
     }
 }

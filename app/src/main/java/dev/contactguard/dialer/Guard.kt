@@ -55,6 +55,7 @@ object Guard {
     private const val GOOGLE = "com.google"
 
     fun prefs(ctx: Context) = ctx.getSharedPreferences("guard", Context.MODE_PRIVATE)
+    fun autoRestore(ctx: Context) = prefs(ctx).getBoolean("autoRestore", true)
     private fun has(ctx: Context, p: String) = ContextCompat.checkSelfPermission(ctx, p) == PackageManager.PERMISSION_GRANTED
 
     // ---------- reading ----------
@@ -161,7 +162,8 @@ object Guard {
                 val ev = Event(System.currentTimeMillis(), d.lost, d.massAccounts.isNotEmpty(), diagnose(ctx, d, marked, old, all, p.getLong("lastCheck", 0)), "pending")
                 events.add(0, ev)
                 saveEvents(ctx, events)
-                if (p.getBoolean("autoRestore", false) && !ev.mass) restore(ctx, ev.id) else notifyLoss(ctx, ev)
+                // Deletes made outside Phone Guard don't count: put them back. Mass deletions still ask (duplicate risk).
+                if (autoRestore(ctx) && !ev.mass) notifyRestored(ctx, ev, restore(ctx, ev.id)) else notifyLoss(ctx, ev)
             } else saveEvents(ctx, events)
         } else saveEvents(ctx, events)
         // SIMs not in the phone right now keep their old records in the baseline.
@@ -404,6 +406,25 @@ object Guard {
     }
 
     // ---------- notification ----------
+
+    private fun notifyRestored(ctx: Context, ev: Event, n: Int) {
+        if (n == 0 || (!has(ctx, Manifest.permission.POST_NOTIFICATIONS) && Build.VERSION.SDK_INT >= 33)) return
+        val open = PendingIntent.getActivity(
+            ctx, 1, Intent(ctx, MainActivity::class.java).putExtra("tab", "guard"),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+        )
+        val title = if (n == 1) "Brought back ${ev.contacts[0].name.ifBlank { "a contact" }}" else "Brought back $n contacts"
+        NotificationManagerCompat.from(ctx).notify(
+            ev.id.toInt(),
+            NotificationCompat.Builder(ctx, App.CH_RESTORED)
+                .setSmallIcon(R.drawable.ic_notify)
+                .setContentTitle(title)
+                .setContentText("Deleted outside Phone Guard. To delete a contact, use Phone Guard.")
+                .setContentIntent(open)
+                .setAutoCancel(true)
+                .build(),
+        )
+    }
 
     private fun notifyLoss(ctx: Context, ev: Event) {
         if (!has(ctx, Manifest.permission.POST_NOTIFICATIONS) && Build.VERSION.SDK_INT >= 33) return

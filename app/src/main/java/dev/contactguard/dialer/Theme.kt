@@ -36,10 +36,7 @@ object Dimens {
     val rowGap = 12.dp
     val avatar = 40.dp
     val avatarLarge = 112.dp
-    val key = 76.dp
     val searchHeight = 56.dp
-    val callButton = 72.dp
-    val tile = 72.dp
 }
 
 /** Google Phone colours its letter avatars from a fixed set of tonal pairs. */
@@ -61,13 +58,6 @@ fun AppTheme(dark: Boolean = isSystemInDarkTheme(), content: @Composable () -> U
         else -> lightColorScheme(primary = Color(0xFF0B57D0))
     }
     MaterialTheme(colorScheme = scheme, content = content)
-}
-
-/** Brand colours that stay fixed across themes: call green and hang-up red, as in the stock dialer. */
-object CallColors {
-    val answer = Color(0xFF1E8E3E)
-    val hangup = Color(0xFFDC362E)
-    val onCall = Color.White
 }
 
 @Composable

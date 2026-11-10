@@ -9,10 +9,10 @@ android {
 
     defaultConfig {
         applicationId = "dev.contactguard.dialer"
-        minSdk = 29 // Android 10: first version with RoleManager.ROLE_DIALER
+        minSdk = 29
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1"
     }
 
     buildTypes {
