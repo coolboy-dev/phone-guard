@@ -13,9 +13,10 @@ Open the file on the phone and allow "Install unknown apps" for your browser or 
 1. Install the APK above, or build it yourself (see Build below).
 2. Open it → **Allow access to contacts**.
 3. Guard tab:
+   - **Run in background → Allow**, then **Allow** in the pop-up. This is the "Unrestricted" battery
+     setting, so checks aren't paused (important on Nothing OS and other battery-saving phones).
    - **App activity → Allow**: records which apps were open when contacts vanish.
    - **Backup folder → Choose**: pick a folder, e.g. Documents. A daily `.vcf` copy goes there.
-4. Nothing OS: Settings → Apps → Phone Guard → Battery → **Unrestricted**, so checks aren't delayed.
 
 ## How deleting works
 - **To delete a contact, use Phone Guard**: Contacts tab → open the contact → 🗑. It asks for your

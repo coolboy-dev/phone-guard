@@ -2,6 +2,7 @@ package dev.contactguard.dialer
 
 import android.content.Intent
 import android.net.Uri
+import android.os.PowerManager
 import android.provider.Settings
 import android.text.format.DateUtils
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -83,6 +84,7 @@ fun GuardScreen() {
         }
     }
     val writers by produceState<List<String>?>(null) { value = withContext(Dispatchers.IO) { Guard.contactWriters(ctx) } }
+    val settings = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { local++ }
     val folder = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
         if (uri != null) {
             ctx.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
@@ -135,6 +137,20 @@ fun GuardScreen() {
 
         item {
             Section("Protection") {
+                // Phones like Nothing OS pause background apps to save battery; this asks for the "Unrestricted" setting directly.
+                val bg = remember(local) { ctx.getSystemService(PowerManager::class.java).isIgnoringBatteryOptimizations(ctx.packageName) }
+                ListItem(
+                    { Text("Run in background") },
+                    supportingContent = { Text(if (bg) "On: checks run even when the app is closed" else "Needed so checks aren't paused to save battery") },
+                    trailingContent = {
+                        if (bg) Icon(Icons.Outlined.CheckCircle, "Allowed", tint = MaterialTheme.colorScheme.primary)
+                        else TextButton(onClick = {
+                            val ask = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:${ctx.packageName}"))
+                            settings.launch(if (ask.resolveActivity(ctx.packageManager) != null) ask else Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
+                        }) { Text("Allow") }
+                    },
+                    colors = clear,
+                )
                 ListItem(
                     { Text("Restore automatically") },
                     supportingContent = { Text("Contacts deleted outside Phone Guard come back on their own. Many at once always asks first.") },
@@ -172,7 +188,7 @@ fun GuardScreen() {
                     supportingContent = { Text(if (usage) "On: records which apps were open when contacts disappear" else "Allow usage access to record which apps were open when contacts disappear") },
                     trailingContent = {
                         if (usage) Icon(Icons.Outlined.CheckCircle, "Allowed", tint = MaterialTheme.colorScheme.primary)
-                        else TextButton(onClick = { ctx.startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)) }) { Text("Allow") }
+                        else TextButton(onClick = { settings.launch(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)) }) { Text("Allow") }
                     },
                     colors = clear,
                 )
