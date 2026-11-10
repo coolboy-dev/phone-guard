@@ -1,0 +1,9 @@
+<resources>
+    <style name="Theme.PhoneGuard" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+    <style name="Theme.PhoneGuard.Call" parent="Theme.PhoneGuard">
+        <item name="android:windowBackground">@android:color/black</item>
+    </style>
+</resources>
