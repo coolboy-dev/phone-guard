@@ -4,8 +4,13 @@ A phone app for Android 10+ (written for a Nothing Phone (3a) Lite). It keeps a 
 from all Google accounts, phone storage and SIM. When contacts disappear, it alerts you, records the
 likely cause, and puts them back.
 
+## Download
+**[⬇ Download PhoneGuard.apk](https://github.com/coolboy-dev/phone-guard/releases/latest/download/PhoneGuard.apk)** (latest release, Android 10+)
+
+Open the file on the phone and allow "Install unknown apps" for your browser or file manager when asked.
+
 ## Install on the phone
-1. Build the APK (see Build below) and copy it to the phone, or run `adb install app-release.apk`.
+1. Install the APK above, or build it yourself (see Build below).
 2. Open it → **Set as default phone app** → **Allow access to contacts and calls**.
 3. Guard tab:
    - **App activity → Allow**: records which apps were open when contacts vanish.
@@ -28,6 +33,8 @@ likely cause, and puts them back.
 ## Build
 `./gradlew assembleRelease` → `app/build/outputs/apk/release/app-release.apk` (debug-signed, for sideloading).
 Test: `./gradlew testDebugUnitTest` (diff logic).
+
+Keypad: long-press the number to paste a copied number (or copy the typed one).
 
 Not built yet: contact photos and group labels are not restored; no video calls; the missed-call
 notification comes from the system (it may show a number instead of the name).

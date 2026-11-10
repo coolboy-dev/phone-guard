@@ -1,5 +1,7 @@
 package dev.contactguard.dialer
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.media.AudioManager
 import android.media.ToneGenerator
 import android.provider.CallLog
@@ -18,6 +20,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -32,6 +35,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Backspace
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.outlined.PersonAdd
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
@@ -109,6 +114,12 @@ fun DialPad(onKey: (Char) -> Unit, onLong: (Char) -> Boolean = { false }, tones:
     }
 }
 
+/** Keeps only what a dialer can dial: digits, a leading +, and * # , ; for codes and pauses. */
+fun dialable(s: String): String {
+    val kept = s.filter { it.isDigit() || it in "+*#,;" }
+    return kept.take(1) + kept.drop(1).replace("+", "")
+}
+
 fun formatNumber(n: String): String = PhoneNumberUtils.formatNumber(n, Locale.getDefault().country) ?: n
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -146,10 +157,30 @@ fun KeypadScreen(initial: String, all: List<Match>, onCall: (String) -> Unit, on
             }
             Row(Modifier.fillMaxWidth().height(72.dp).padding(horizontal = Dimens.gutter), verticalAlignment = Alignment.CenterVertically) {
                 Spacer(Modifier.width(48.dp))
-                Text(
-                    formatNumber(number), Modifier.weight(1f), style = MaterialTheme.typography.displaySmall,
-                    textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.StartEllipsis,
-                )
+                // Long-press the number area to paste (or copy), like the stock dialer.
+                var menu by remember { mutableStateOf(false) }
+                Box(
+                    Modifier.weight(1f).fillMaxHeight()
+                        .combinedClickable(onClick = {}, onLongClick = { menu = true }, onLongClickLabel = "Paste or copy number"),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        formatNumber(number), style = MaterialTheme.typography.displaySmall,
+                        textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.StartEllipsis,
+                    )
+                    DropdownMenu(menu, { menu = false }) {
+                        DropdownMenuItem({ Text("Paste") }, {
+                            menu = false
+                            val clip = ctx.getSystemService(ClipboardManager::class.java).primaryClip
+                            val text = clip?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.coerceToText(ctx)?.toString().orEmpty()
+                            number += dialable(text)
+                        })
+                        if (number.isNotEmpty()) DropdownMenuItem({ Text("Copy") }, {
+                            menu = false
+                            ctx.getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("Phone number", number))
+                        })
+                    }
+                }
                 AnimatedVisibility(number.isNotEmpty(), enter = fadeIn() + scaleIn(), exit = fadeOut() + scaleOut()) {
                     Box(
                         Modifier.size(48.dp).clip(CircleShape)
